@@ -6,7 +6,7 @@ cwd     = GetCurrentDir()
 # The set of source files associated with this SConscript file.
 src     = Glob('src/*.c')
 
-if GetDepend('ONNX_PARSER_USING_MNIST_EXAMPLE'):
+if GetDepend('ONNX_BACKEND_USING_MNIST_EXAMPLE'):
 	src    += Glob('examples/mnist.c')
 
 path   =  [cwd + '/src']
@@ -14,6 +14,6 @@ path   += [cwd + '/examples']
 
 LOCAL_CCFLAGS = ''
 
-group = DefineGroup('onnx-parser', src, depend = ['PKG_USING_ONNX_BACKEND'], CPPPATH = path, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
+group = DefineGroup('onnx-backend', src, depend = ['PKG_USING_ONNX_BACKEND'], CPPPATH = path, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
 
 Return('group')

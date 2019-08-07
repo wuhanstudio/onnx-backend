@@ -1,14 +1,14 @@
 #ifndef __TRANSPOSE_H__
 #define __TRANSPOSE_H__
 
+#include <rtthread.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <malloc.h>
 #include <float.h>
 #include <math.h>
 
-void* onnx_tensor_info(const float* A, int* shape, int dim);
+void onnx_tensor_info(const float* A, int* shape, int dim);
 float* transpose(const float* A, int* shape, int dim, int* perm);
 
 void conv2D(const float *input,                                                // input image

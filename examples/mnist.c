@@ -1,14 +1,14 @@
+#include <rtthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <float.h>
 #include <math.h>
 
 #include "mnist.h"
 #include "backend.h"
 
-int main(int argc, char const *argv[])
+static void onnx_mnist(int argc, char const *argv[])
 {
     int img_index = 0;
     if(argc == 2)
@@ -125,6 +125,5 @@ int main(int argc, char const *argv[])
 
     free(dense2);
     free(output);
-
-    return 0;
 }
+MSH_CMD_EXPORT(onnx_mnist, mnist using onnx backend);

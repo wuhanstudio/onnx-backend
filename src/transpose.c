@@ -1,6 +1,6 @@
 #include "backend.h"
 
-void* onnx_tensor_info(const float* A, int* shape, int dim)
+void onnx_tensor_info(const float* A, int* shape, int dim)
 {
     int elem = 1;
     for(int i = 0; i < dim; i++)
@@ -34,14 +34,14 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
     }
 
     // Malloc memory for B
-    float* B = malloc(sizeof(float) * elem);
+    float* B = (float*) malloc(sizeof(float) * elem);
     if(B == NULL)
     {
         return NULL;
     }
 
     // Malloc memory for shapeB
-    int* shapeB = malloc(sizeof(int) * dim);
+    int* shapeB = (int*) malloc(sizeof(int) * dim);
     if( shapeB == NULL)
     {
         return NULL;
@@ -64,12 +64,12 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
         // Get transposed B array
         // A[1][0][3] -> B[3][1][0]
         int temp = src;
-        int* indexA = malloc(sizeof(int) * dim);
+        int* indexA = (int*) malloc(sizeof(int) * dim);
         if(indexA == NULL)
         {
             return NULL;
         }
-        int* indexB = malloc(sizeof(int) * dim);
+        int* indexB = (int*) malloc(sizeof(int) * dim);
         if(indexB == NULL)
         {
             return NULL;
