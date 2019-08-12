@@ -14,6 +14,17 @@ static void onnx_mnist(int argc, char const *argv[])
     if(argc == 2)
     {
         img_index = atoi(argv[1]);
+        if(img_index > TOTAL_IMAGE-1)
+        {
+            printf("%s: image (0-%d)\n", argv[0], TOTAL_IMAGE-1);
+            printf("Maximum datasets available %d\n", TOTAL_IMAGE);
+            return;
+        }
+    }
+    else
+    {
+        printf("%s: image (0-%d)\n", argv[0], TOTAL_IMAGE-1);
+        return;
     }
     print_img(img[img_index]);
 
