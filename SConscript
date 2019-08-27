@@ -9,6 +9,12 @@ src     = Glob('src/*.c')
 if GetDepend('ONNX_BACKEND_USING_MNIST_EXAMPLE'):
 	src    += Glob('examples/mnist.c')
 
+if GetDepend('ONNX_BACKEND_USING_MNIST_SMALL_EXAMPLE'):
+	src    += Glob('examples/mnist_sm.c')
+
+if GetDepend('ONNX_BACKEND_USING_MNIST_MODEL_EXAMPLE'):
+	src    += Glob('examples/mnist_model.c')
+
 path   =  [cwd + '/src']
 path   += [cwd + '/examples']
 
