@@ -6,66 +6,46 @@
 #include <math.h>
 
 #include "mnist.h"
-#include "backend.h"
+#include "onnx.h"
 
-static void onnx_mnist(int argc, char const *argv[])
+int mnist(int argc, char const *argv[])
 {
     int img_index = 0;
     if(argc == 2)
     {
         img_index = atoi(argv[1]);
-        if(img_index > TOTAL_IMAGE-1)
-        {
-            printf("%s: image (0-%d)\n", argv[0], TOTAL_IMAGE-1);
-            printf("Maximum datasets available %d\n", TOTAL_IMAGE);
-            return;
-        }
-    }
-    else
-    {
-        printf("%s: image (0-%d)\n", argv[0], TOTAL_IMAGE-1);
-        return;
     }
     print_img(img[img_index]);
 
-    // Transpose Input
-    int shapeA[] = {1, 28, 28};
-    int dimA = 3;
-    int perm[] = { 1, 2, 0};
-    float* input = transpose(img[img_index], shapeA, dimA, perm);
-
-    // Print input
-    // int shapeInput[] = {28, 28, 1};
-    // int dimInput = 3;
-    // onnx_tensor_info(input, shapeInput, dimInput);
-
     // 1. Conv2D
-    int shapeW3[] = {2, 1, 3, 3};
-    int dimW3 = 4;
-    int permW3_t[] = { 0, 2, 3, 1};
+    int64_t shapeW3[] = {2, 1, 3, 3};
+    int64_t dimW3 = 4;
+    int64_t permW3_t[] = { 0, 2, 3, 1};
     float* W3_t = transpose(W3, shapeW3, dimW3, permW3_t);
 
     float* conv1 = (float*) malloc(sizeof(float)*28*28*2);
     memset(conv1, 0, sizeof(sizeof(float)*28*28*2));
-    conv2D(input, 28, 28, 1, W3, 2, 3, 3, 1, 1, 1, 1, B3, conv1, 28, 28);
+    conv2D(img[img_index], 28, 28, 1, W3, 2, 3, 3, 1, 1, 1, 1, B3, conv1, 28, 28);
 
     free(W3_t);
-    free(input);
 
     // 2. Relu
-    relu(conv1, 28*28*2);
+    float* relu1 = (float*) malloc(sizeof(float)*28*28*2);
+    relu(conv1, 28*28*2, relu1);
+
+    free(conv1);
 
     // 3. Maxpool
     float* maxpool1 = (float*) malloc(sizeof(float)*14*14*2);
     memset(maxpool1, 0, sizeof(sizeof(float)*14*14*2));
-    maxpool(conv1, 28, 28, 2, 2, 2, 0, 0, 2, 2, 14, 14, maxpool1);
+    maxpool(relu1, 28, 28, 2, 2, 2, 0, 0, 2, 2, 14, 14, maxpool1);
 
-    free(conv1);
+    free(relu1);
 
     // 4. Conv2D
-    int shapeW2[] = {2, 2, 3, 3};
-    int dimW2 = 4;
-    int perm_t[] = { 0, 2, 3, 1};
+    int64_t shapeW2[] = {2, 2, 3, 3};
+    int64_t dimW2 = 4;
+    int64_t perm_t[] = { 0, 2, 3, 1};
     float* W2_t = transpose(W2, shapeW2, dimW2, perm_t);
 
     float* conv2 = (float*) malloc(sizeof(float)*14*14*2);
@@ -76,21 +56,24 @@ static void onnx_mnist(int argc, char const *argv[])
     free(maxpool1);
 
     // 5. Relu
-    relu(conv2, 14*14*2);
+    float* relu2 = (float*) malloc(sizeof(float)*14*14*2);
+    relu(conv2, 14*14*2, relu2);
+
+    free(conv2);
 
     // 6. Maxpool
     float* maxpool2 = (float*) malloc(sizeof(float)*7*7*2);
     memset(maxpool2, 0, sizeof(sizeof(float)*7*7*2));
-    maxpool(conv2, 14, 14, 2, 2, 2, 0, 0, 2, 2, 7, 7, maxpool2);
+    maxpool(relu2, 14, 14, 2, 2, 2, 0, 0, 2, 2, 7, 7, maxpool2);
 
-    free(conv2);
+    free(relu2);
 
     // Flatten NOT REQUIRED
 
     // 7. Dense
-    int shapeW1[] = {98, 4};
-    int dimW1 = 2;
-    int permW1_t[] = { 1, 0};
+    int64_t shapeW1[] = {98, 4};
+    int64_t dimW1 = 2;
+    int64_t permW1_t[] = { 1, 0};
     float* W1_t = transpose(W1, shapeW1, dimW1, permW1_t);
 
     float* dense1 = (float*) malloc(sizeof(float)*4);
@@ -101,9 +84,9 @@ static void onnx_mnist(int argc, char const *argv[])
     free(maxpool2);
 
     // 8. Dense
-    int shapeW[] = {4, 10};
-    int dimW = 2;
-    int permW_t[] = { 1, 0};
+    int64_t shapeW[] = {4, 10};
+    int64_t dimW = 2;
+    int64_t permW_t[] = { 1, 0};
     float* W_t = transpose(W, shapeW, dimW, permW_t);
 
     float* dense2 = (float*) malloc(sizeof(float)*10);
@@ -136,5 +119,7 @@ static void onnx_mnist(int argc, char const *argv[])
 
     free(dense2);
     free(output);
+
+    return 0;
 }
-MSH_CMD_EXPORT(onnx_mnist, mnist using onnx backend);
+MSH_CMD_EXPORT(mnist, mnist simple example)

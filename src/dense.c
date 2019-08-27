@@ -1,4 +1,4 @@
-#include "backend.h"
+#include "onnx.h"
 
 void dense(const float *input,              // pointer to vector
            const float *weight,             // pointer to matrix

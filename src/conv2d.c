@@ -1,4 +1,4 @@
-#include "backend.h"
+#include "onnx.h"
 
 void conv2D(const float *input,                                                // input image
             const uint16_t dim_im_in_x,                                        // input image dimention x
@@ -55,4 +55,59 @@ void conv2D(const float *input,                                                /
             }
         }
     }
+}
+
+float* conv2D_layer(Onnx__GraphProto* graph, const float *input, int64_t* shapeInput, int64_t* shapeOutput, const char* layer_name)
+{
+    assert(graph != NULL && input != NULL && layer_name != "" );
+
+    Onnx__NodeProto* node = onnx_graph_get_node_by_name(graph, layer_name);
+    if(node == NULL)
+    {
+        // layer not found
+        return NULL;
+    }
+    const char* weight = node->input[1];
+    const char* bias = node->input[2];
+
+    // Get weight shape
+    int64_t* shapeW = onnx_graph_get_dims_by_name(graph, weight);
+    if(shapeW == NULL)
+    {
+        return NULL;
+    }
+    int64_t dimW = onnx_graph_get_dim_by_name(graph, weight);
+    if(dimW < 0)
+    {
+        return NULL;
+    }
+
+    // Get weights
+    // NCWH --> NWHC
+    int64_t permW_t[] = { 0, 2, 3, 1};
+    float* W = onnx_graph_get_weights_by_name(graph, weight);
+    if(W == NULL)
+    {
+        return NULL;
+    }
+    float* W_t = transpose(W, shapeW, dimW, permW_t);
+
+    // Get bias
+    float* B = onnx_graph_get_weights_by_name(graph, bias);
+    if(B == NULL)
+    {
+        return NULL;
+    }
+
+    float* output = (float*) malloc(sizeof(float)*shapeW[0]*shapeInput[W_INDEX]*shapeInput[H_INDEX]);
+    memset(output, 0, sizeof(sizeof(float)*shapeW[0]*shapeInput[W_INDEX]*shapeInput[H_INDEX]));
+    conv2D(input, shapeInput[W_INDEX], shapeInput[H_INDEX], shapeW[1], W_t, shapeW[0], shapeW[2], shapeW[3], 1, 1, 1, 1, B, output, shapeInput[W_INDEX], shapeInput[H_INDEX]);
+
+    shapeOutput[W_INDEX] = shapeInput[W_INDEX];
+    shapeOutput[H_INDEX] = shapeInput[H_INDEX];
+    shapeOutput[C_INDEX] = shapeW[0];
+
+    free(W_t);
+
+    return output;
 }

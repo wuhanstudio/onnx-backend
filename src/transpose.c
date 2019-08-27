@@ -1,30 +1,6 @@
-#include "backend.h"
+#include "onnx.h"
 
-void onnx_tensor_info(const float* A, int* shape, int dim)
-{
-    int elem = 1;
-    for(int i = 0; i < dim; i++)
-    {
-        elem = elem * shape[i];
-    }
-
-    printf("Array size: %d\n", elem);
-    for(int i = 0; i < elem; i++)
-    {
-        printf( "%f ", A[i] );
-        int split = 1;
-        for(int j = dim-1; j > 0; j--)
-        {
-            split = split * shape[j];
-            if( (i+1) % split == 0)
-            {
-                printf("\n");
-            }
-        }
-    }
-}
-
-float* transpose(const float* A, int* shape, int dim, int* perm)
+float* transpose(const float* A, int64_t* shape, int64_t dim, int64_t* perm)
 {
     // Get array size
     int elem = 1;
@@ -34,14 +10,14 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
     }
 
     // Malloc memory for B
-    float* B = (float*) malloc(sizeof(float) * elem);
+    float* B = malloc(sizeof(float) * elem);
     if(B == NULL)
     {
         return NULL;
     }
 
     // Malloc memory for shapeB
-    int* shapeB = (int*) malloc(sizeof(int) * dim);
+    int* shapeB = malloc(sizeof(int) * dim);
     if( shapeB == NULL)
     {
         return NULL;
@@ -51,25 +27,18 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
         shapeB[i] = shape[perm[i]];
     }
 
-    // printf("Shape B: ");
-    // for(int i = 0; i < dim; i++)
-    // {
-    //     printf("%d ", shapeB[i]);
-    // }
-    // printf("\n");
-
     // Transpose
     for(int src = 0; src < elem; src++)
     {
         // Get transposed B array
         // A[1][0][3] -> B[3][1][0]
         int temp = src;
-        int* indexA = (int*) malloc(sizeof(int) * dim);
+        int* indexA = malloc(sizeof(int) * dim);
         if(indexA == NULL)
         {
             return NULL;
         }
-        int* indexB = (int*) malloc(sizeof(int) * dim);
+        int* indexB = malloc(sizeof(int) * dim);
         if(indexB == NULL)
         {
             return NULL;
@@ -96,17 +65,6 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
 
         B[dst] = A[src];
 
-        // printf("#%d: ", src);
-        // for(int i = 0; i < dim; i++)
-        // {
-        //     printf("%d ", indexA[i]);
-        // }
-        // printf(" -> ");
-        // for(int i = 0; i < dim; i++)
-        // {
-        //     printf("%d ", indexB[i]);
-        // }
-        // printf("#%d\n", dst);
         free(indexA);
         free(indexB);
     }
@@ -114,4 +72,29 @@ float* transpose(const float* A, int* shape, int dim, int* perm)
     free(shapeB);
 
     return B;
+}
+
+float* transpose_layer(Onnx__GraphProto* graph, const float *input, int64_t* shapeInput, int64_t* shapeOutput, const char* layer_name)
+{
+    assert(graph != NULL && input != NULL && layer_name != "" );
+
+    Onnx__NodeProto* node = onnx_graph_get_node_by_name(graph, layer_name);
+    if(node == NULL)
+    {
+        return NULL;
+    }
+
+    int64_t perm_t[3];
+    int64_t* perm = node->attribute[0]->ints;
+    perm_t[0] = perm[1] - 1;
+    perm_t[1] = perm[2] - 1;
+    perm_t[2] = perm[3] - 1;
+
+    float* output = transpose(input, shapeInput, 3, perm_t);
+
+    shapeOutput[0] = shapeInput[perm_t[0]];
+    shapeOutput[1] = shapeInput[perm_t[1]];
+    shapeOutput[2] = shapeInput[perm_t[2]];
+
+    return output;
 }

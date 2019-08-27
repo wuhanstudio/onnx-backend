@@ -1,4 +1,4 @@
-#include "backend.h"
+#include "onnx.h"
 
 void maxpool(const float *input,
              const uint16_t dim_im_in_x,  // input image dimension x or W
@@ -41,4 +41,55 @@ void maxpool(const float *input,
             }
         }
     }
+}
+
+float* maxpool_layer(Onnx__GraphProto* graph, float* input, int64_t* shapeInput, int64_t* shapeOutput, const char* layer_name)
+{
+    assert(graph != NULL && input != NULL && layer_name != "" );
+
+    Onnx__NodeProto* node = onnx_graph_get_node_by_name(graph, layer_name);
+    if(node == NULL)
+    {
+        // layer not found
+        return NULL;
+    }
+
+    uint16_t kernel_x =  1;
+    uint16_t kernel_y =  1;
+    uint16_t padding_x = 0;
+    uint16_t padding_y = 0;
+    uint16_t stride_x =  1;
+    uint16_t stride_y =  1;
+
+    for(int i = 0; i < node->n_attribute; i++)
+    {
+        if( strcmp(node->attribute[i]->name, "kernel_shape") == 0 )
+        {
+            kernel_x = node->attribute[i]->ints[0];
+            kernel_y = node->attribute[i]->ints[1];
+        }
+        if( strcmp(node->attribute[i]->name, "strides") == 0 )
+        {
+            stride_x = node->attribute[i]->ints[0];
+            stride_y = node->attribute[i]->ints[1];
+        }
+    }
+
+    uint16_t out_x = (shapeInput[W_INDEX] - kernel_x + 2 * padding_x) / stride_x + 1;
+    uint16_t out_y = (shapeInput[H_INDEX] - kernel_y + 2 * padding_y) / stride_y + 1;
+
+    float* output = (float*) malloc(sizeof(float)*out_x*out_y*shapeInput[C_INDEX]);
+    if(output == NULL)
+    {
+        // No memory
+        return NULL;
+    }
+    memset(output, 0, sizeof(sizeof(float)*out_x*out_y*shapeInput[C_INDEX]));
+    maxpool(input, shapeInput[W_INDEX], shapeInput[H_INDEX], shapeInput[C_INDEX], kernel_x, kernel_y, padding_x, padding_y, stride_x, stride_y, out_x, out_y, output);
+
+    shapeOutput[W_INDEX] = out_x;
+    shapeOutput[H_INDEX] = out_y;
+    shapeOutput[C_INDEX] = shapeInput[C_INDEX];
+
+    return output;
 }
