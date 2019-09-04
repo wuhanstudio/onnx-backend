@@ -1,19 +1,35 @@
+![](https://raw.githubusercontent.com/onnx/onnx/master/docs/ONNX_logo_main.png)
+
 ## onnx-backend
 
->  通用神经网络模型 onnx 在 RT-Thread 上的后端
+**通用神经网络模型 onnx 在 RT-Thread 上的后端**
 
-如果能在 RT-Thread 上解析并运行 onnx 的模型，那么就可以在 RT-Thread 上运行几乎所有主流机器学习框架了，例如 Tensorflow, Keras, Pytorch, Caffe2, mxnet ...
+[ONNX](https://onnx.ai/) (Open Neural Network Exchange) 是机器学习模型的通用格式，可以帮助大家方便地融合不同机器学习框架的模型。
 
-由于 onnx 的模型是 Google Protobuf v3 的格式，所以这个后端依赖于2个软件包：
+如果能在 RT-Thread 上解析并运行 onnx 的模型，那么就可以在 RT-Thread 上运行几乎所有主流机器学习框架了，例如 Tensorflow, Keras, Pytorch, Caffe2, mxnet, 因为它们生成的模型都可以转换为 onnx。
 
-- protobuf-c
-- onnx-parser
+## 支持的算子
 
+- Conv2D
+- Relu
+- Maxpool
+- Softmax
+- Matmul
+- Add
+- Flatten
+- Transpose
 
+## 手写体例程
 
-#### 手写体例程
+当前只有一个手写体识别的例程：利用 Keras 训练一个卷积神经网络模型，保存为 onnx 模型，再在 RT-Thread 上解析模型进行 inference，当前在 STM32F407 上测试通过。
 
-当前只有一个手写体识别的例程：利用 Keras 训练一个卷积神经网络模型，保存为 onnx 模型，再在 RT-Thread 上解析出模型里的参数进行 inference，当前以及在 STM32F407 上测试通过。
+不过这个例程分成了 3 个小的 demo，放在 examples 目录下，用来更直观地展示 onnx-backend 的工作流程，最小的 demo 只需要 16KB 内存就可以了，因此在 STM32F103C8T6 上也可以运行：
+
+- mnist.c: 纯手动构建模型，模型参数保存在 mnist.h
+
+- mnist_sm.c: 纯手动构建模型，模型参数从 onnx 文件加载
+
+- mnist_model.c: 自动从 onnx 文件加载模型和参数
 
 ```
 _________________________________________________________________
@@ -124,6 +140,14 @@ The number is 7
 
 ```
 
+## 注意事项
+
+由于 onnx 的模型是 Google Protobuf v3 的格式，所以这个后端依赖于2个软件包，默认也会选中这两个软件包：
+
+- protobuf-c
+- onnx-parser
+
+--------
 
 
 ## Todo List
