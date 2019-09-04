@@ -6,7 +6,7 @@
 
 [ONNX](https://onnx.ai/) (Open Neural Network Exchange) 是机器学习模型的通用格式，可以帮助大家方便地融合不同机器学习框架的模型。
 
-如果能在 RT-Thread 上解析并运行 onnx 的模型，那么就可以在 RT-Thread 上运行几乎所有主流机器学习框架了，例如 Tensorflow, Keras, Pytorch, Caffe2, mxnet, 因为它们生成的模型都可以转换为 onnx。
+如果能在 RT-Thread 上解析并运行 onnx 的模型，那么就可以在 [RT-Thread](https://www.rt-thread.org) 上运行几乎所有主流机器学习框架了，例如 Tensorflow, Keras, Pytorch, Caffe2, mxnet, 因为它们生成的模型都可以转换为 onnx。
 
 ## 支持的算子
 
